@@ -20,11 +20,25 @@ function onDrop (source, target) {
   var move = game.move({
     from: source,
     to: target,
-    promotion: 'q' // NOTE: always promote to a queen for example simplicity
+    promotion: 'q'
   })
 
   // illegal move
   if (move === null) return 'snapback'
+
+  // promotion
+  if (move.flags.includes('p')) {
+    game.undo()
+    var promotionChoice = prompt("Choose promotion piece (q, r, b, n):", "q");
+    if (!["q", "r", "b", "n"].includes(promotionChoice)) {
+      promotionChoice = "q"; // 잘못된 입력 시 기본값 퀸
+    }
+    game.move({
+      from: source,
+      to: target,
+      promotion: promotionChoice
+    })
+  } 
 
   updateStatus()
 }
@@ -68,8 +82,10 @@ function updateStatus () {
   $fen.html(game.fen())
   $pgn.html(game.pgn())
 
-  if (moveColor === 'Black') {
-    game.move(game.moves()[0])
+  if (moveColor === 'Black' && !game.game_over()) {
+    var validMoves = game.moves()
+    // game.move(validMoves[0])
+    game.move(validMoves[Math.floor((Math.random() * 1000) % validMoves.length)])
     updateStatus()
   }
 }
