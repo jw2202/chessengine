@@ -2,9 +2,11 @@ import { Chess } from 'chess.js';
 
 var board = null;
 var game = new Chess();
+var vgame = new Chess();
 var $status = $('#status');
 var $fen = $('#fen');
 var $pgn = $('#pgn');
+var $loadpgn = $('#loadpgn');
 const PIECESCORES = {
   'p' : 100,
   'b' : 300,
@@ -13,6 +15,18 @@ const PIECESCORES = {
   'q' : 900,
   'k' : 10000
 };
+
+loadpgn.onclick = loadPgn;
+function loadPgn() {
+  var savedpgn = document.getElementById('savedpgn').value;
+  game.loadPgn(savedpgn);
+  board.position(game.fen());
+  // $status.html(status);
+  // $fen.html(game.fen());
+  // $pgn.html(game.pgn());
+  updateStatus();
+  board.position(game.fen());
+}
 
 function onDragStart (source, piece, position, orientation) {
   // do not pick up pieces if the game is over
@@ -41,7 +55,7 @@ function evaluateBoard() {
 function miniMax(depth) {
   if (game.isCheckmate()) {
     return { 
-      score: game.turn() == 'w' ? 999999999999 : -999999999999
+      score: game.turn() == 'w' ? -999999999999 : 999999999999
     }
   }
 
@@ -58,6 +72,32 @@ function miniMax(depth) {
   }
 
   let moves = game.moves();
+
+  // let evaluated = [];
+  
+  // for (let i = 0; i < moves.length; i++) {
+  //   var move = moves[i];
+  //   game.move(move);
+  //   var result = evaluateBoard();
+  //   game.undo();
+  //   evaluated.push({ move: move, score: result.score});
+  // }
+
+  // let best = evaluated[0];
+  // if (game.turn() == 'w') {
+  //   for (let i = 0; i < evaluated.length; i++) {
+  //     if (evaluated[i].score > best.score) {
+  //       best = evaluated[i];
+  //     }
+  //   }
+  // } else {
+  //   for (let i = 0; i < evaluated.length; i++) {
+  //     if (evaluated[i].score < best.score) {
+  //       best = evaluated[i];
+  //     }
+  //   }
+  // }
+
 
   let evaluated = [];
   for (let i = 0; i < moves.length; i++) {
@@ -160,8 +200,10 @@ function updateStatus() {
     // game.move(validMoves[Math.floor((Math.random() * 1000) % validMoves.length)]);
     var bestMove = miniMax(3);
     game.move(bestMove.move);
+    console.log("fwea");
 
     updateStatus();
+    console.log("qwer");
   }
 }
 
