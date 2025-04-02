@@ -7,6 +7,8 @@ var $status = $('#status');
 var $fen = $('#fen');
 var $pgn = $('#pgn');
 var $loadpgn = $('#loadpgn');
+var whiteSquareGrey = '#a9a9a9'
+var blackSquareGrey = '#696969'
 const PIECESCORES = {
   'p' : 100,
   'b' : 300,
@@ -15,6 +17,21 @@ const PIECESCORES = {
   'q' : 900,
   'k' : 10000
 };
+
+function removeGreySquares () {
+  $('#myBoard .square-55d63').css('background', '')
+}
+
+function greySquare (square) {
+  var $square = $('#myBoard .square-' + square)
+
+  var background = whiteSquareGrey
+  if ($square.hasClass('black-3c85d')) {
+    background = blackSquareGrey
+  }
+
+  $square.css('background', background)
+}
 
 $loadpgn.onclick = loadPgn;
 function loadPgn() {
@@ -123,9 +140,32 @@ function onDrop (source, target) {
       promotion: promotionChoice
     });
   } 
-  board.position(game.fen());
+  // board.position(game.fen());
 
   updateStatus();
+}
+
+function onMouseoverSquare (square, piece) {
+  // get list of possible moves for this square
+  var moves = game.moves({
+    square: square,
+    verbose: true
+  })
+
+  // exit if there are no moves available for this square
+  if (moves.length === 0) return
+
+  // highlight the square they moused over
+  greySquare(square)
+
+  // highlight the possible squares for this piece
+  for (var i = 0; i < moves.length; i++) {
+    greySquare(moves[i].to)
+  }
+}
+
+function onMouseoutSquare (square, piece) {
+  removeGreySquares()
 }
 
 // update the board position after the piece snap
@@ -181,7 +221,9 @@ var config = {
   position: 'start',
   onDragStart: onDragStart,
   onSnapEnd: onSnapEnd,
-  onDrop: onDrop
+  onDrop: onDrop,
+  onMouseoverSquare: onMouseoverSquare,
+  onMouseoutSquare: onMouseoutSquare
 };
 board = Chessboard('myBoard', config);
 
