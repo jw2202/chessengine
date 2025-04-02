@@ -16,14 +16,10 @@ const PIECESCORES = {
   'k' : 10000
 };
 
-loadpgn.onclick = loadPgn;
+$loadpgn.onclick = loadPgn;
 function loadPgn() {
   var savedpgn = document.getElementById('savedpgn').value;
   game.loadPgn(savedpgn);
-  board.position(game.fen());
-  // $status.html(status);
-  // $fen.html(game.fen());
-  // $pgn.html(game.pgn());
   updateStatus();
   board.position(game.fen());
 }
@@ -127,6 +123,7 @@ function onDrop (source, target) {
       promotion: promotionChoice
     });
   } 
+  board.position(game.fen());
 
   updateStatus();
 }
@@ -138,7 +135,6 @@ function onSnapEnd () {
 }
 
 function updateStatus() {
-  console.log(evaluateBoard());
   var status = '';
 
   var moveColor = 'White';
@@ -184,8 +180,8 @@ var config = {
   draggable: true,
   position: 'start',
   onDragStart: onDragStart,
-  onDrop: onDrop,
-  onSnapEnd: onSnapEnd
+  onSnapEnd: onSnapEnd,
+  onDrop: onDrop
 };
 board = Chessboard('myBoard', config);
 
