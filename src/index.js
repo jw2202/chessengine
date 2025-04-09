@@ -33,7 +33,7 @@ function greySquare (square) {
   $square.css('background', background)
 }
 
-$loadpgn.onclick = loadPgn;
+loadpgn.onclick = loadPgn;
 function loadPgn() {
   var savedpgn = document.getElementById('savedpgn').value;
   game.loadPgn(savedpgn);
@@ -68,7 +68,7 @@ function evaluateBoard() {
 function miniMax(depth) {
   if (game.isCheckmate()) {
     return { 
-      score: game.turn() == 'w' ? -999999999999 : 999999999999
+      score: game.turn() == 'w' ? -999999999999 - depth : 999999999999 + depth
     }
   }
 
