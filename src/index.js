@@ -17,6 +17,8 @@ const PIECESCORES = {
   'q' : 900,
   'k' : 10000
 };
+const INT_MIN = -2147483648
+const INT_MAX = 2147483647
 
 function removeGreySquares () {
   $('#myBoard .square-55d63').css('background', '')
@@ -65,10 +67,10 @@ function evaluateBoard() {
   return score;
 }
 
-function miniMax(depth) {
+function alphaBeta(depth, alpha, beta) {
   if (game.isCheckmate()) {
     return { 
-      score: game.turn() == 'w' ? -999999999999 - depth : 999999999999 + depth
+      score: game.turn() == 'w' ? INT_MIN + 10000: INT_MAX - 10000
     }
   }
 
@@ -86,32 +88,74 @@ function miniMax(depth) {
 
   let moves = game.moves();
 
-  let evaluated = [];
+  // let evaluated = [];
   
-  for (let i = 0; i < moves.length; i++) {
-    var move = moves[i];
-    game.move(move);
-    var result = miniMax(depth - 1);
-    game.undo();
-    evaluated.push({ move: move, score: result.score });
-  }
+  // for (let i = 0; i < moves.length; i++) {
+  //   var move = moves[i];
+  //   game.move(move);
+  //   var result = alphaBeta(depth - 1, alpha, beta);
+  //   game.undo();
+  //   evaluated.push({ move: move, score: result.score });
+  // }
 
-  let best = evaluated[0];
+  // let best = evaluated[0];
+  // if (game.turn() === 'w') {
+  //   for (let i = 0; i < evaluated.length; i++) {
+  //     if (evaluated[i].score > best.score) {
+  //       best = evaluated[i];
+  //     }
+  //   }
+  // } else {
+  //   for (let i = 0; i < evaluated.length; i++) {
+  //     if (evaluated[i].score < best.score) {
+  //       best = evaluated[i];
+  //     }
+  //   }
+  // }
+
+  // return best;
+
   if (game.turn() === 'w') {
-    for (let i = 0; i < evaluated.length; i++) {
-      if (evaluated[i].score > best.score) {
-        best = evaluated[i];
+    var score = INT_MIN;
+    var best = moves[0];
+
+    for (var i = 0; i < moves.length; i++) {
+      var move = moves[i];
+      game.move(move);
+      var result = alphaBeta(depth - 1, alpha, beta);
+      if (result.score > 9999999) result.score -= 1;
+      else if (result.score < -9999999) result.score += 1;
+      game.undo();
+      if (result.score > score) {
+        score = result.score;
+        best = move;
       }
+      alpha = Math.max(alpha, score);
+      if (score >= beta) break;
     }
-  } else {
-    for (let i = 0; i < evaluated.length; i++) {
-      if (evaluated[i].score < best.score) {
-        best = evaluated[i];
+  }
+  else {
+    var score = INT_MAX;
+    var best = moves[0];
+
+    for (var i = 0; i < moves.length; i++) {
+      var move = moves[i];
+      game.move(move);
+      var result = alphaBeta(depth - 1, alpha, beta);
+      if (result.score > 9999999) result.score -= 1;
+      else if (result.score < -9999999) result.score += 1;
+      game.undo();
+      if (result.score < score) {
+        score = result.score;
+        best = move;
       }
+      beta = Math.min(beta, score);
+      if (score <= alpha) break;
     }
   }
 
-  return best;
+  return { score: score, move: best };
+
 }
 
 function onDrop (source, target) {
@@ -208,7 +252,7 @@ function updateStatus() {
 
   if (moveColor === 'Black' && !game.isGameOver()) {
     setTimeout(function(){
-      var bestMove = miniMax(3);
+      var bestMove = alphaBeta(4, INT_MIN, INT_MAX);
       game.move(bestMove.move);
       updateStatus();
       board.position(game.fen());
