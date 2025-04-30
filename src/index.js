@@ -86,41 +86,23 @@ function alphaBeta(depth, alpha, beta) {
     }
   }
 
-  let moves = game.moves();
-
-  // let evaluated = [];
-  
-  // for (let i = 0; i < moves.length; i++) {
-  //   var move = moves[i];
-  //   game.move(move);
-  //   var result = alphaBeta(depth - 1, alpha, beta);
-  //   game.undo();
-  //   evaluated.push({ move: move, score: result.score });
-  // }
-
-  // let best = evaluated[0];
-  // if (game.turn() === 'w') {
-  //   for (let i = 0; i < evaluated.length; i++) {
-  //     if (evaluated[i].score > best.score) {
-  //       best = evaluated[i];
-  //     }
-  //   }
-  // } else {
-  //   for (let i = 0; i < evaluated.length; i++) {
-  //     if (evaluated[i].score < best.score) {
-  //       best = evaluated[i];
-  //     }
-  //   }
-  // }
-
-  // return best;
+  let moves = game.moves({ verbose: true });
+  let normalMoves = [];
+  let captureMoves = [];
+  let promotionMoves = [];
+  for(var i = 0; i < moves.length; i++) {
+    if (moves[i].isCapture()) captureMoves.push(moves[i]);
+    else if (moves[i].isPromotion()) promotionMoves.push(moves[i]);
+    else normalMoves.push(moves[i]);
+  }
+  moves = promotionMoves.concat(captureMoves).concat(normalMoves);
 
   if (game.turn() === 'w') {
     var score = INT_MIN;
     var best = moves[0];
 
     for (var i = 0; i < moves.length; i++) {
-      var move = moves[i];
+      var move = moves[i].san;
       game.move(move);
       var result = alphaBeta(depth - 1, alpha, beta);
       if (result.score > 9999999) result.score -= 1;
@@ -252,7 +234,7 @@ function updateStatus() {
 
   if (moveColor === 'Black' && !game.isGameOver()) {
     setTimeout(function(){
-      var bestMove = alphaBeta(4, INT_MIN, INT_MAX);
+      var bestMove = alphaBeta(5, INT_MIN, INT_MAX);
       game.move(bestMove.move);
       updateStatus();
       board.position(game.fen());
