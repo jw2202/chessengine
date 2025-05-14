@@ -6,15 +6,16 @@ var $status = $('#status');
 var $fen = $('#fen');
 var $pgn = $('#pgn');
 var $loadpgn = $('#loadpgn');
+var $undo = $('#undo');
 var whiteSquareGrey = '#a9a9a9'
 var blackSquareGrey = '#696969'
 const PIECESCORES = {
-  'p' : 100,
-  'b' : 300,
-  'n' : 300,
-  'r' : 500,
-  'q' : 900,
-  'k' : 10000
+  'p' : 1000,
+  'b' : 3000,
+  'n' : 3000,
+  'r' : 5000,
+  'q' : 9000,
+  'k' : 100000
 };
 const PST = {
   'p': [   [0,   0,   0,   0,   0,   0,   0,   0],
@@ -69,6 +70,15 @@ const PST = {
 const INT_MIN = -2147483648
 const INT_MAX = 2147483647
 
+undo.onclick = Undo;
+function Undo() {
+  game.undo();
+  game.undo();
+  updateStatus();
+  board.position(game.fen());
+  return;
+}
+
 function removeGreySquares () {
   $('#myBoard .square-55d63').css('background', '')
 }
@@ -109,7 +119,7 @@ function evaluateBoard() {
   for (var i = 0; i < currentBoard.length; i++) {
     for (var j = 0; j < currentBoard[i].length; j++) {
       if (currentBoard[i][j] !== null) {
-        score += (PIECESCORES[currentBoard[i][j].type] + (currentBoard[i][j].color === 'w' ? PST[currentBoard[i][j].type][i][j] * -1 : PST[currentBoard[i][j].type].reverse()[i][j])) * (currentBoard[i][j].color === 'w' ? 1 : -1);
+        score += (PIECESCORES[currentBoard[i][j].type] + (currentBoard[i][j].color === 'w' ? PST[currentBoard[i][j].type][i][j] : PST[currentBoard[i][j].type].reverse()[i][j])) * (currentBoard[i][j].color === 'w' ? 1 : -1);
         // console.log(PST[currentBoard[i][j].type][i])
       }
     }
@@ -118,6 +128,11 @@ function evaluateBoard() {
 }
 
 function alphaBeta(depth, alpha, beta) {
+  for (let i = 0; i < book.length; i++) {
+    if (game.pgn() in book[i]) {
+      game.move(book[i+1])
+    }
+  }
   if (game.isCheckmate()) {
     return { 
       score: game.turn() === 'w' ? INT_MIN + 10000: INT_MAX - 10000
