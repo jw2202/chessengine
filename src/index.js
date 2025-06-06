@@ -10,12 +10,12 @@ var $undo = $('#undo');
 var whiteSquareGrey = '#a9a9a9'
 var blackSquareGrey = '#696969'
 const PIECESCORES = {
-  'p' : 1000,
-  'b' : 3000,
-  'n' : 3000,
-  'r' : 5000,
-  'q' : 9000,
-  'k' : 100000
+  'p' : 100,
+  'b' : 320,
+  'n' : 280,
+  'r' : 479,
+  'q' : 929,
+  'k' : 60000
 };
 const PST = {
   'p': [   [0,   0,   0,   0,   0,   0,   0,   0],
@@ -66,17 +66,16 @@ const PST = {
          [-47, -42, -43, -79, -64, -32, -29, -32],
           [-4,   3, -14, -50, -57, -18,  13,   4],
           [17,  30,  -3, -14,   6,  -1,  40,  18]],
-}
-const INT_MIN = -2147483648
-const INT_MAX = 2147483647
+};
+const INT_MIN = -2147483648;
+const INT_MAX = 2147483647;
 
-undo.onclick = Undo;
-function Undo() {
+undo.onclick = doUndo;
+function doUndo() {
   game.undo();
   game.undo();
   updateStatus();
   board.position(game.fen());
-  return;
 }
 
 function removeGreySquares () {
@@ -113,14 +112,27 @@ function onDragStart (source, piece, position, orientation) {
   }
 }
 
+function getPieceValue(type, square, isWhitePiece, isWhitetoMove) {
+  var direction = isWhitePiece === isWhitetoMove ? 1 : -1;
+
+  // console.log(square);
+  var file = square.charCodeAt(0) - 97;
+  var rank = (isWhitePiece ? 8 - square[1] : square[1] - 1);
+  // console.log(type, rank, file);
+
+  var pstval = PST[type][rank][file];
+
+  return (PIECESCORES[type] + pstval) * direction;
+}
+
 function evaluateBoard() {
   var currentBoard = game.board();
   var score = 0;
   for (var i = 0; i < currentBoard.length; i++) {
     for (var j = 0; j < currentBoard[i].length; j++) {
       if (currentBoard[i][j] !== null) {
-        score += (PIECESCORES[currentBoard[i][j].type] + (currentBoard[i][j].color === 'w' ? PST[currentBoard[i][j].type][i][j] : PST[currentBoard[i][j].type].reverse()[i][j])) * (currentBoard[i][j].color === 'w' ? 1 : -1);
-        // console.log(PST[currentBoard[i][j].type][i])
+        // score += (PIECESCORES[currentBoard[i][j].type] + (currentBoard[i][j].color === 'w' ? PST[currentBoard[i][j].type][i][j] : PST[currentBoard[i][j].type].reverse()[i][j])) * (currentBoard[i][j].color === 'w' ? 1 : -1);
+        score += getPieceValue(currentBoard[i][j].type, currentBoard[i][j].square, currentBoard[i][j].color === 'w', game.turn() === 'w');
       }
     }
   }
@@ -128,11 +140,6 @@ function evaluateBoard() {
 }
 
 function alphaBeta(depth, alpha, beta) {
-  for (let i = 0; i < book.length; i++) {
-    if (game.pgn() in book[i]) {
-      game.move(book[i+1])
-    }
-  }
   if (game.isCheckmate()) {
     return { 
       score: game.turn() === 'w' ? INT_MIN + 10000: INT_MAX - 10000
@@ -186,7 +193,7 @@ function alphaBeta(depth, alpha, beta) {
     var best = moves[0];
 
     for (var i = 0; i < moves.length; i++) {
-      var move = moves[i];
+      var move = moves[i].san;
       game.move(move);
       var result = alphaBeta(depth - 1, alpha, beta);
       if (result.score > 9999999) result.score -= 1;
@@ -230,8 +237,7 @@ function onDrop (source, target) {
       to: target,
       promotion: promotionChoice
     });
-  } 
-  // board.position(game.fen());
+  }
 
   updateStatus();
 }
@@ -241,22 +247,22 @@ function onMouseoverSquare (square, piece) {
   var moves = game.moves({
     square: square,
     verbose: true
-  })
+  });
 
   // exit if there are no moves available for this square
-  if (moves.length === 0) return
+  if (moves.length === 0) return;
 
   // highlight the square they moused over
-  greySquare(square)
+  greySquare(square);
 
   // highlight the possible squares for this piece
   for (var i = 0; i < moves.length; i++) {
-    greySquare(moves[i].to)
+    greySquare(moves[i].to);
   }
 }
 
 function onMouseoutSquare (square, piece) {
-  removeGreySquares()
+  removeGreySquares();
 }
 
 // update the board position after the piece snap
